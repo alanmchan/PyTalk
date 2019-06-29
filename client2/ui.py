@@ -3,7 +3,7 @@
 
 为用户提供图形界面,将用户指令发给逻辑处理层
 """
-
+import sys
 import tkinter as tk
 import time
 from threading import Thread
@@ -88,10 +88,10 @@ class App:
         print('welcome')
         self.forget_login()
         self.master.geometry('800x600')
-        self.dialog_text = tk.StringVar()
+        self.master.title(f'PyTalk {self.name.get()}')
+        self.master.protocol("WM_DELETE_WINDOW", self.quit)
         self.dialog = tk.Text(self.master, font=('微软雅黑', 16, 'normal'), state='disable')  # , textvariable=self.dialog_text
         self.dialog.place(relx=0, rely=0, relwidth=1, relheight=0.7)
-        self.input_text = tk.StringVar()
         self.input = tk.Text(self.master, font=('微软雅黑', 16, 'normal'))  # , textvariable=self.input_text
         self.input.place(relx=0, rely=0.7, relwidth=1, relheight=0.2)
         self.btn_send = tk.Button(self.master, command=self.send, text='发送', font=('微软雅黑', 16, 'normal'))
@@ -100,8 +100,10 @@ class App:
         self.btn_cancle.place(relx=0.5, rely=0.9, relwidth=0.5, relheight=0.1)
 
         # 创建线程接收消息
-        t = Thread(target=self.client.recv)
+        t = Thread(target=self.recv)
+        t.setDaemon(True)
         t.start()
+        # t.join()
 
     def forget_login(self):
         '''移除登录界面的控件，以便放置其他界面的控件'''
@@ -125,14 +127,14 @@ class App:
             # 修改消息框为可编辑状态
             self.dialog.config(state='normal')
             # 为消息框设置time——style样式，用于显示时间
-            self.dialog.tag_config('time_style', font=('Arial', 10, 'normal'), justify='right', foreground='silver')  #
+            self.dialog.tag_config('send_time_style', font=('Arial', 10, 'normal'), justify='right', foreground='silver')  #
             # 为消息框设置text——style样式，用于显示用户输入消息
-            self.dialog.tag_config('text_style', font=('微软雅黑', 16, 'normal'), justify='right')  # , background='lightgreen'
+            self.dialog.tag_config('send_text_style', font=('微软雅黑', 16, 'normal'), justify='right')  # , background='lightgreen'
             # 在消息框插入时间, 并指定样式
             time_string = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n'
-            self.dialog.insert('end', time_string, 'time_style')
+            self.dialog.insert('end', time_string, 'send_time_style')
             # 在消息框插入信息， 并制定样式
-            self.dialog.insert('end', msg + '\n', 'text_style')
+            self.dialog.insert('end', msg + '\n', 'send_text_style')
             # 修改消息框为不可编辑状态
             self.dialog.config(state='disable')
             # 清空输入框内容
@@ -144,10 +146,33 @@ class App:
         print("接收消息")
         while True:
             msg = self.client.recv()
-            print(msg)
+            print('client -- ui-->bll の', msg)
+            if msg == 'EXIT':
+                self.master.quit()
+                sys.exit()
+            msg_list = msg.split(' ')
+            name = msg_list[0]
+            msg = ' '.join(msg_list[1:])
+            self.dialog.configure(state='normal')  # 修改消息框为可编辑状态
+            # 为消息框设置time——style样式，用于显示时间
+            self.dialog.tag_config('recv_time_style', font=('Arial', 10, 'normal'), justify='left', foreground='silver')
+            # 为消息框设置text——style样式，用于显示用户输入消息
+            self.dialog.tag_config('recv_text_style', font=('微软雅黑', 16, 'normal'), justify='left')
+            # 在消息框插入时间, 并指定样式
+            time_string = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()) + '\n'
+            self.dialog.insert('end', time_string, 'recv_time_style')
+            # 在消息框插入信息， 并制定样式
+            self.dialog.insert('end', name + ':\n', 'recv_text_style')  # 插入姓名
+            self.dialog.insert('end', msg + '\n', 'recv_text_style')  # 插入消息
+            self.dialog.config(state='disable')# 修改消息框为不可编辑状态
 
     def cancle(self):
         self.input.delete(1.0, 'end')
+
+    def quit(self):
+        self.client.quit(self.name.get())
+        # if data == 'EXIT':
+        #     sys.exit(f'{self.name.get()}退出聊天室')
 
 
 if __name__ == "__main__":

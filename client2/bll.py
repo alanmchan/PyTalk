@@ -21,6 +21,7 @@ class Client:
         self.sockfd.sendto(msg.encode(), ADDR)
         # 等待回复
         data, addr = self.sockfd.recvfrom(1024)
+        print(data.decode())
         return data.decode()
 
     def register(self, name, pwd):
@@ -36,7 +37,7 @@ class Client:
 
     def recv(self):
         data, addr = self.sockfd.recvfrom(2048)
-        print(data.decode())
+        print('client--bll', data.decode())
         return data.decode()
 
     def quit(self, name):

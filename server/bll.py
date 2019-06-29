@@ -69,7 +69,7 @@ class Server:
 		if result == 'OK':
 			self.sockfd.sendto(b'OK', addr)
 			# 通知其他用户有人加入聊天室
-			msg = '欢迎%s进入聊天室' % name
+			msg = '公告 欢迎%s进入聊天室' % name
 			for user in self.users:
 				self.sockfd.sendto(msg.encode(), self.users[user])
 			# 将新用户加入在线用户列表
@@ -83,10 +83,14 @@ class Server:
 		self.sockfd.sendto(result.encode(), addr)
 
 	def do_quit(self, name):
-		msg = "%s 退出聊天室" % name
+		msg = "公告 %s退出聊天室" % name
 		for user in self.users:
 			if user != name:
 				self.sockfd.sendto(msg.encode(), self.users[user])
+			else:
+				self.sockfd.sendto(b'EXIT', self.users[name])
+		del self.users[name]
+		print(self.users)
 
 	def do_chat(self, name, msg):
 		msg = name + ' ' + msg

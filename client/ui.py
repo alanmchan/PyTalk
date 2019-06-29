@@ -11,7 +11,7 @@ from tkinter import messagebox
 
 from client.bll import Client
 
-class App:
+class UI:
     def __init__(self, client):
         self.client = client
         self.root = tk.Tk()
@@ -22,7 +22,7 @@ class App:
         pass
 
 
-class AppLogin(App):
+class UILogin(UI):
     def __init__(self, client):
         super().__init__(client)
 
